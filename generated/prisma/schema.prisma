@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum PricingPlan {
+  FREE
+  PRO
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+enum AccessLogType {
+  LOGIN
+  LOGOUT
+}
+
+// ========== CORE MODELS ==========
+
+model User {
+  id           Int      @id @default(autoincrement())
+  firstname    String
+  lastname     String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(STUDENT)
+
+  profile    Profile?
+  accessLogs AccessLog[]
+
+  admin   Admin?
+  teacher Teacher?
+  student Student?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+}
+
+model Profile {
+  id          Int    @id @default(autoincrement())
+  userId      Int    @unique
+  phoneNumber String @unique
+
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+}
+
+model AccessLog {
+  id     Int           @id @default(autoincrement())
+  type   AccessLogType @default(LOGIN)
+  userId Int
+  user   User          @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+}
+
+// ========== ADMIN / INSTITUTE ==========
+
+model Admin {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  institutes Institute[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+}
+
+model Institute {
+  id      String      @id @default(uuid())
+  name    String      @unique
+  code    String      @unique
+  website String?
+  logo    String?
+  plan    PricingPlan @default(FREE)
+
+  creatorId Int
+  admin     Admin @relation(fields: [creatorId], references: [id])
+
+  departments   Department[]
+  students      Student[]
+  teachers      Teacher[]
+  academicYears AcademicYear[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+}
+
+// ========== DEPARTMENTS & COURSES ==========
+
+model Department {
+  id          String @id @default(uuid())
+  name        String
+  status      Status @default(ACTIVE)
+  headId      Int    @unique
+  instituteId String
+
+  lecturer  Teacher   @relation(fields: [headId], references: [id])
+  institute Institute @relation(fields: [instituteId], references: [id])
+
+  courses Course[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+}
+
+model Course {
+  id           String @id @default(uuid())
+  name         String
+  departmentId String
+
+  department Department @relation(fields: [departmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+}
+
+// ========== ACADEMIC STRUCTURE ==========
+
+model AcademicYear {
+  id          String @id @default(uuid())
+  name        String
+  status      Status @default(ACTIVE)
+  instituteId String
+
+  institute Institute @relation(fields: [instituteId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+}
+
+model Cohort {
+  id           String  @id @default(ulid())
+  name         String  @unique
+  intakeYear   String
+  expectedExit String?
+
+  students Student[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+}
+
+// ========== STUDENT & TEACHER ==========
+
+model Teacher {
+  id             Int         @id @default(autoincrement())
+  userId         Int         @unique
+  instituteId    String
+  user           User        @relation(fields: [userId], references: [id])
+  institute      Institute   @relation(fields: [instituteId], references: [id])
+  Leaddepartment Department?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt()
+}
+
+model Student {
+  id       Int     @id @default(autoincrement())
+  userId   Int     @unique
+  fullName String
+  bio      String?
+
+  instituteId String
+  cohortId    String
+
+  user      User      @relation(fields: [userId], references: [id])
+  institute Institute @relation(fields: [instituteId], references: [id])
+  cohort    Cohort    @relation(fields: [cohortId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+}
+
+// ========== STUDENT & CIURSES RELATIONS ====
