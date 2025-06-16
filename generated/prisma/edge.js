@@ -252,7 +252,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/home/alaric/apis/lms/generated/prisma",
+      "value": "/home/alaric-senpai/Documents/github/apis/lmsapi/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -261,17 +261,16 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "debian-openssl-1.1.x",
+        "value": "debian-openssl-3.0.x",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/home/alaric/apis/lms/prisma/schema.prisma",
+    "sourceFilePath": "/home/alaric-senpai/Documents/github/apis/lmsapi/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../../prisma",
   "clientVersion": "6.9.0",
