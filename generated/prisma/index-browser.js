@@ -122,10 +122,8 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
-  firstname: 'firstname',
-  lastname: 'lastname',
   email: 'email',
-  passwordHash: 'passwordHash',
+  password: 'password',
   role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -134,91 +132,303 @@ exports.Prisma.UserScalarFieldEnum = {
 exports.Prisma.ProfileScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
-  phoneNumber: 'phoneNumber',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.AccessLogScalarFieldEnum = {
-  id: 'id',
-  type: 'type',
-  userId: 'userId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  fullName: 'fullName',
+  phone: 'phone'
 };
 
 exports.Prisma.AdminScalarFieldEnum = {
   id: 'id',
-  userId: 'userId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  userId: 'userId'
+};
+
+exports.Prisma.LecturerScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId'
+};
+
+exports.Prisma.StudentScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId'
 };
 
 exports.Prisma.InstituteScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  code: 'code',
-  website: 'website',
-  logo: 'logo',
-  plan: 'plan',
-  creatorId: 'creatorId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  code: 'code'
 };
 
 exports.Prisma.DepartmentScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  status: 'status',
-  headId: 'headId',
-  instituteId: 'instituteId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  instituteId: 'instituteId'
 };
 
 exports.Prisma.CourseScalarFieldEnum = {
   id: 'id',
   name: 'name',
   departmentId: 'departmentId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  description: 'description'
+};
+
+exports.Prisma.UnitScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  code: 'code'
+};
+
+exports.Prisma.UnitOnCourseScalarFieldEnum = {
+  courseId: 'courseId',
+  unitId: 'unitId'
 };
 
 exports.Prisma.AcademicYearScalarFieldEnum = {
   id: 'id',
+  yearLabel: 'yearLabel',
+  startDate: 'startDate',
+  endDate: 'endDate'
+};
+
+exports.Prisma.SemesterScalarFieldEnum = {
+  id: 'id',
   name: 'name',
+  order: 'order',
+  startDate: 'startDate',
+  endDate: 'endDate'
+};
+
+exports.Prisma.CourseIntakeScalarFieldEnum = {
+  id: 'id',
+  courseId: 'courseId',
+  academicYearId: 'academicYearId',
+  name: 'name'
+};
+
+exports.Prisma.UnitOfferingScalarFieldEnum = {
+  id: 'id',
+  unitId: 'unitId',
+  courseIntakeId: 'courseIntakeId',
+  lecturerId: 'lecturerId',
+  semesterId: 'semesterId'
+};
+
+exports.Prisma.StudentEnrollmentScalarFieldEnum = {
+  id: 'id',
+  studentId: 'studentId',
+  courseIntakeId: 'courseIntakeId'
+};
+
+exports.Prisma.LessonScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  content: 'content',
+  unitOfferingId: 'unitOfferingId',
+  lecturerId: 'lecturerId',
+  semesterId: 'semesterId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.StudentProgressScalarFieldEnum = {
+  id: 'id',
+  studentEnrollmentId: 'studentEnrollmentId',
+  lessonId: 'lessonId',
+  progress: 'progress',
+  lastAccessedAt: 'lastAccessedAt',
+  remarks: 'remarks'
+};
+
+exports.Prisma.OnlineLessonScalarFieldEnum = {
+  id: 'id',
+  unitOfferingId: 'unitOfferingId',
+  lecturerId: 'lecturerId',
+  semesterId: 'semesterId',
+  courseIntakeId: 'courseIntakeId',
+  topic: 'topic',
+  description: 'description',
+  link: 'link',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ExamScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  unitOfferingId: 'unitOfferingId',
+  lecturerId: 'lecturerId',
+  semesterId: 'semesterId',
+  releaseDate: 'releaseDate',
+  dueDate: 'dueDate',
+  durationMinutes: 'durationMinutes',
+  maxAttempts: 'maxAttempts'
+};
+
+exports.Prisma.ExamQuestionScalarFieldEnum = {
+  id: 'id',
+  examId: 'examId',
+  question: 'question',
+  type: 'type',
+  options: 'options',
+  correctAnswers: 'correctAnswers',
+  maxScore: 'maxScore'
+};
+
+exports.Prisma.ExamAttemptScalarFieldEnum = {
+  id: 'id',
+  studentId: 'studentId',
+  examId: 'examId',
+  startedAt: 'startedAt',
+  submittedAt: 'submittedAt'
+};
+
+exports.Prisma.ExamAnswerScalarFieldEnum = {
+  id: 'id',
+  examAttemptId: 'examAttemptId',
+  questionId: 'questionId',
+  response: 'response',
+  aiScore: 'aiScore',
+  awardedScore: 'awardedScore',
+  markedByAI: 'markedByAI',
+  markedByLecturer: 'markedByLecturer'
+};
+
+exports.Prisma.AssignmentScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  unitOfferingId: 'unitOfferingId',
+  semesterId: 'semesterId',
+  lecturerId: 'lecturerId',
+  releaseDate: 'releaseDate',
+  dueDate: 'dueDate',
+  maxAttempts: 'maxAttempts'
+};
+
+exports.Prisma.AssignmentSubmissionScalarFieldEnum = {
+  id: 'id',
+  assignmentId: 'assignmentId',
+  studentId: 'studentId',
+  submittedAt: 'submittedAt',
+  fileUrl: 'fileUrl',
+  responseText: 'responseText',
+  aiScore: 'aiScore',
+  awardedScore: 'awardedScore',
+  markedByAI: 'markedByAI',
+  markedByLecturer: 'markedByLecturer'
+};
+
+exports.Prisma.CatScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  unitOfferingId: 'unitOfferingId',
+  lecturerId: 'lecturerId',
+  semesterId: 'semesterId',
+  releaseDate: 'releaseDate',
+  dueDate: 'dueDate',
+  durationMinutes: 'durationMinutes',
+  maxAttempts: 'maxAttempts'
+};
+
+exports.Prisma.CatQuestionScalarFieldEnum = {
+  id: 'id',
+  catId: 'catId',
+  question: 'question',
+  type: 'type',
+  options: 'options',
+  correctAnswers: 'correctAnswers',
+  maxScore: 'maxScore'
+};
+
+exports.Prisma.CatAttemptScalarFieldEnum = {
+  id: 'id',
+  studentId: 'studentId',
+  catId: 'catId',
+  startedAt: 'startedAt',
+  submittedAt: 'submittedAt'
+};
+
+exports.Prisma.CatAnswerScalarFieldEnum = {
+  id: 'id',
+  catAttemptId: 'catAttemptId',
+  questionId: 'questionId',
+  response: 'response',
+  aiScore: 'aiScore',
+  awardedScore: 'awardedScore',
+  markedByAI: 'markedByAI',
+  markedByLecturer: 'markedByLecturer'
+};
+
+exports.Prisma.GradeScalarFieldEnum = {
+  id: 'id',
+  enrollmentId: 'enrollmentId',
+  unitOfferingId: 'unitOfferingId',
+  score: 'score',
+  grade: 'grade',
+  remarks: 'remarks'
+};
+
+exports.Prisma.TranscriptScalarFieldEnum = {
+  id: 'id',
+  studentId: 'studentId',
+  academicYearId: 'academicYearId',
+  issuedAt: 'issuedAt',
+  fileUrl: 'fileUrl'
+};
+
+exports.Prisma.GradeReportScalarFieldEnum = {
+  id: 'id',
+  enrollmentId: 'enrollmentId',
+  semesterId: 'semesterId',
+  issuedAt: 'issuedAt',
+  fileUrl: 'fileUrl'
+};
+
+exports.Prisma.NotificationScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  message: 'message',
+  recipientId: 'recipientId',
+  roleTarget: 'roleTarget',
+  isRead: 'isRead',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AnnouncementScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  content: 'content',
+  createdById: 'createdById',
+  visibleTo: 'visibleTo',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.RemarkRequestScalarFieldEnum = {
+  id: 'id',
+  gradeId: 'gradeId',
+  studentId: 'studentId',
+  reason: 'reason',
   status: 'status',
-  instituteId: 'instituteId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  reviewedBy: 'reviewedBy',
+  reviewedAt: 'reviewedAt'
 };
 
-exports.Prisma.CohortScalarFieldEnum = {
+exports.Prisma.FeedbackScalarFieldEnum = {
   id: 'id',
-  name: 'name',
-  intakeYear: 'intakeYear',
-  expectedExit: 'expectedExit',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  studentId: 'studentId',
+  lecturerId: 'lecturerId',
+  unitOfferingId: 'unitOfferingId',
+  content: 'content',
+  rating: 'rating',
+  createdAt: 'createdAt'
 };
 
-exports.Prisma.TeacherScalarFieldEnum = {
+exports.Prisma.ResourceScalarFieldEnum = {
   id: 'id',
-  userId: 'userId',
-  instituteId: 'instituteId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.StudentScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  fullName: 'fullName',
-  bio: 'bio',
-  instituteId: 'instituteId',
-  cohortId: 'cohortId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  unitOfferingId: 'unitOfferingId',
+  title: 'title',
+  description: 'description',
+  fileUrl: 'fileUrl',
+  uploadedById: 'uploadedById',
+  uploadedAt: 'uploadedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -235,39 +445,61 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
-exports.UserRole = exports.$Enums.UserRole = {
+exports.Role = exports.$Enums.Role = {
   STUDENT: 'STUDENT',
-  TEACHER: 'TEACHER',
+  LECTURER: 'LECTURER',
   ADMIN: 'ADMIN'
 };
 
-exports.AccessLogType = exports.$Enums.AccessLogType = {
-  LOGIN: 'LOGIN',
-  LOGOUT: 'LOGOUT'
+exports.QuestionType = exports.$Enums.QuestionType = {
+  STRUCTURED: 'STRUCTURED',
+  UNSTRUCTURED: 'UNSTRUCTURED'
 };
 
-exports.PricingPlan = exports.$Enums.PricingPlan = {
-  FREE: 'FREE',
-  PRO: 'PRO'
-};
-
-exports.Status = exports.$Enums.Status = {
-  ACTIVE: 'ACTIVE',
-  INACTIVE: 'INACTIVE'
+exports.RemarkStatus = exports.$Enums.RemarkStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  REVISED: 'REVISED'
 };
 
 exports.Prisma.ModelName = {
   User: 'User',
   Profile: 'Profile',
-  AccessLog: 'AccessLog',
   Admin: 'Admin',
+  Lecturer: 'Lecturer',
+  Student: 'Student',
   Institute: 'Institute',
   Department: 'Department',
   Course: 'Course',
+  Unit: 'Unit',
+  UnitOnCourse: 'UnitOnCourse',
   AcademicYear: 'AcademicYear',
-  Cohort: 'Cohort',
-  Teacher: 'Teacher',
-  Student: 'Student'
+  Semester: 'Semester',
+  CourseIntake: 'CourseIntake',
+  UnitOffering: 'UnitOffering',
+  StudentEnrollment: 'StudentEnrollment',
+  Lesson: 'Lesson',
+  StudentProgress: 'StudentProgress',
+  OnlineLesson: 'OnlineLesson',
+  Exam: 'Exam',
+  ExamQuestion: 'ExamQuestion',
+  ExamAttempt: 'ExamAttempt',
+  ExamAnswer: 'ExamAnswer',
+  Assignment: 'Assignment',
+  AssignmentSubmission: 'AssignmentSubmission',
+  Cat: 'Cat',
+  CatQuestion: 'CatQuestion',
+  CatAttempt: 'CatAttempt',
+  CatAnswer: 'CatAnswer',
+  Grade: 'Grade',
+  Transcript: 'Transcript',
+  GradeReport: 'GradeReport',
+  Notification: 'Notification',
+  Announcement: 'Announcement',
+  RemarkRequest: 'RemarkRequest',
+  Feedback: 'Feedback',
+  Resource: 'Resource'
 };
 
 /**

@@ -8,125 +8,116 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  STUDENT
-  TEACHER
-  ADMIN
-}
-
-enum PricingPlan {
-  FREE
-  PRO
-}
-
-enum Status {
-  ACTIVE
-  INACTIVE
-}
-
-enum AccessLogType {
-  LOGIN
-  LOGOUT
-}
-
-// ========== CORE MODELS ==========
+// ========================
+// 👥 User & Role Management
+// ========================
+// ========================
+// 👥 User & Role Management
+// ========================
 
 model User {
-  id           Int      @id @default(autoincrement())
-  firstname    String
-  lastname     String
-  email        String   @unique
-  passwordHash String
-  role         UserRole @default(STUDENT)
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+  role     Role
 
-  profile    Profile?
-  accessLogs AccessLog[]
-
-  admin   Admin?
-  teacher Teacher?
-  student Student?
+  profile  Profile?
+  student  Student?
+  lecturer Lecturer?
+  admin    Admin?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt()
-
-  Discussion Discussion[]
-
-  Announcement Announcement[]
 
   Notification Notification[]
 }
 
+enum Role {
+  STUDENT
+  LECTURER
+  ADMIN
+}
+
 model Profile {
-  id          Int    @id @default(autoincrement())
-  userId      Int    @unique
-  phoneNumber String @unique
+  id       String  @id @default(uuid())
+  userId   String  @unique
+  fullName String
+  phone    String?
 
   user User @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
 }
-
-model AccessLog {
-  id     Int           @id @default(autoincrement())
-  type   AccessLogType @default(LOGIN)
-  userId Int
-  user   User          @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-}
-
-// ========== ADMIN / INSTITUTE ==========
 
 model Admin {
-  id     Int  @id @default(autoincrement())
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id])
+  id     String @id @default(uuid())
+  userId String @unique
 
+  user       User        @relation(fields: [userId], references: [id])
   institutes Institute[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
+  Announcement Announcement[]
+
+  ExamPeriod ExamPeriod[]
 }
+
+model Lecturer {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  user               User           @relation(fields: [userId], references: [id])
+  offerings          UnitOffering[]
+  lessons            Lesson[]
+  onlineLessons      OnlineLesson[]
+  createdExams       Exam[]
+  createdAssignments Assignment[]
+  createdCats        Cat[]
+
+  Feedback Feedback[]
+
+  Resource Resource[]
+}
+
+model Student {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  user         User                   @relation(fields: [userId], references: [id])
+  enrollments  StudentEnrollment[]
+  submissions  AssignmentSubmission[]
+  examAttempts ExamAttempt[]
+  catAttempts  CatAttempt[]
+
+  Transcript Transcript[]
+
+  RemarkRequest RemarkRequest[]
+
+  Feedback Feedback[]
+}
+
+// ========================
+// 🏫 Institutional Layer
+// ========================
 
 model Institute {
-  id      String      @id @default(uuid())
-  name    String      @unique
-  code    String      @unique
-  website String?
-  logo    String?
-  plan    PricingPlan @default(FREE)
+  id   String @id @default(uuid())
+  name String
+  code String @unique
 
-  creatorId Int
-  admin     Admin @relation(fields: [creatorId], references: [id])
-
-  departments   Department[]
-  students      Student[]
-  teachers      Teacher[]
-  academicYears AcademicYear[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
+  departments Department[]
+  admins      Admin[]
 }
-
-// ========== DEPARTMENTS & COURSES ==========
 
 model Department {
   id          String @id @default(uuid())
   name        String
-  status      Status @default(ACTIVE)
-  headId      Int    @unique
   instituteId String
 
-  lecturer  Teacher   @relation(fields: [headId], references: [id])
   institute Institute @relation(fields: [instituteId], references: [id])
-
-  courses Course[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
+  courses   Course[]
 }
+
+// ========================
+// 📚 Static Curriculum
+// ========================
 
 model Course {
   id           String  @id @default(uuid())
@@ -134,578 +125,451 @@ model Course {
   departmentId String
   description  String?
 
-  department Department @relation(fields: [departmentId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-
-  Enrollments Enrollment[]
-  Units       Unit[]
+  department Department     @relation(fields: [departmentId], references: [id])
+  units      UnitOnCourse[]
+  intakes    CourseIntake[]
 }
 
 model Unit {
-  id          String   @id @default(uuid())
+  id          String @id @default(uuid())
   title       String
-  Description String
-  unit_code   String
-  courses     String[]
+  description String
+  code        String @unique
 
-  course Course @relation(fields: [courses], references: [id])
-
-  Discussion Discussion[]
-
-  LearningMaterial LearningMaterial[]
-
-  Announcement Announcement[]
-
-  StudentProgress StudentProgress[]
+  courses   UnitOnCourse[]
+  offerings UnitOffering[]
 }
 
-// ========== ACADEMIC STRUCTURE ==========
+model UnitOnCourse {
+  courseId String
+  unitId   String
+
+  course Course @relation(fields: [courseId], references: [id])
+  unit   Unit   @relation(fields: [unitId], references: [id])
+
+  @@id([courseId, unitId])
+}
+
+// ========================
+// 📆 Academic Sessions
+// ========================
 
 model AcademicYear {
-  id          String @id @default(uuid())
-  name        String
-  status      Status @default(ACTIVE)
-  instituteId String
+  id        String   @id @default(uuid())
+  yearLabel String // e.g. "2024/2025"
+  startDate DateTime
+  endDate   DateTime
 
-  institute Institute @relation(fields: [instituteId], references: [id])
+  intakes CourseIntake[]
+
+  Transcript Transcript[]
+}
+
+model Semester {
+  id        String   @id @default(uuid())
+  name      String // e.g. "Semester 1"
+  order     Int
+  startDate DateTime
+  endDate   DateTime
+
+  offerings     UnitOffering[]
+  lessons       Lesson[]
+  onlineLessons OnlineLesson[]
+  exams         Exam[]
+  assignments   Assignment[]
+  cats          Cat[]
+
+  GradeReport GradeReport[]
+
+  ExamPeriod ExamPeriod[]
+}
+
+model CourseIntake {
+  id             String @id @default(uuid())
+  courseId       String
+  academicYearId String
+  name           String // e.g. "BSc CS 2024 Cohort"
+
+  course       Course       @relation(fields: [courseId], references: [id])
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  enrollments   StudentEnrollment[]
+  unitOfferings UnitOffering[]
+  onlineLessons OnlineLesson[]
+}
+
+model UnitOffering {
+  id             String @id @default(uuid())
+  unitId         String
+  courseIntakeId String
+  lecturerId     String
+  semesterId     String
+
+  unit         Unit         @relation(fields: [unitId], references: [id])
+  courseIntake CourseIntake @relation(fields: [courseIntakeId], references: [id])
+  lecturer     Lecturer     @relation(fields: [lecturerId], references: [id])
+  semester     Semester     @relation(fields: [semesterId], references: [id])
+
+  lessons       Lesson[]
+  onlineLessons OnlineLesson[]
+  exams         Exam[]
+  assignments   Assignment[]
+  cats          Cat[]
+
+  Grade Grade[]
+
+  Feedback Feedback[]
+
+  Resource Resource[]
+}
+
+model StudentEnrollment {
+  id             String @id @default(uuid())
+  studentId      String
+  courseIntakeId String
+
+  student      Student           @relation(fields: [studentId], references: [id])
+  courseIntake CourseIntake      @relation(fields: [courseIntakeId], references: [id])
+  progresses   StudentProgress[]
+
+  Grade Grade[]
+
+  GradeReport GradeReport[]
+}
+
+model Lesson {
+  id             String @id @default(uuid())
+  title          String
+  content        String
+  unitOfferingId String
+  lecturerId     String
+  semesterId     String
+
+  unitOffering UnitOffering @relation(fields: [unitOfferingId], references: [id])
+  lecturer     Lecturer     @relation(fields: [lecturerId], references: [id])
+  semester     Semester     @relation(fields: [semesterId], references: [id])
+
+  progresses StudentProgress[]
+  createdAt  DateTime          @default(now())
+}
+
+model StudentProgress {
+  id                  String   @id @default(uuid())
+  studentEnrollmentId String
+  lessonId            String
+  progress            Int // e.g., 0–100
+  lastAccessedAt      DateTime @default(now())
+  remarks             String?
+
+  studentEnrollment StudentEnrollment @relation(fields: [studentEnrollmentId], references: [id])
+  lesson            Lesson            @relation(fields: [lessonId], references: [id])
+}
+
+model OnlineLesson {
+  id             String @id @default(uuid())
+  unitOfferingId String
+  lecturerId     String
+  semesterId     String
+  courseIntakeId String
+
+  topic       String
+  description String?
+  link        String
+
+  unitOffering UnitOffering @relation(fields: [unitOfferingId], references: [id])
+  lecturer     Lecturer     @relation(fields: [lecturerId], references: [id])
+  semester     Semester     @relation(fields: [semesterId], references: [id])
+  courseIntake CourseIntake @relation(fields: [courseIntakeId], references: [id])
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-
-  EnrollmentPeriods EnrollmentPeriod[]
 }
 
-model Cohort {
-  id           String  @id @default(ulid())
-  name         String  @unique
-  intakeYear   String
-  expectedExit String?
+// ========================
+// 📝 Assessments
+// ========================
 
-  students Student[]
+model Exam {
+  id              String   @id @default(uuid())
+  title           String
+  unitOfferingId  String
+  lecturerId      String
+  semesterId      String
+  releaseDate     DateTime
+  dueDate         DateTime
+  durationMinutes Int
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
+  unitOffering UnitOffering @relation(fields: [unitOfferingId], references: [id])
+  lecturer     Lecturer     @relation(fields: [lecturerId], references: [id])
+  semester     Semester     @relation(fields: [semesterId], references: [id])
+
+  questions    ExamQuestion[]
+  attempts     ExamAttempt[]
+  maxAttempts  Int            @default(1)
+  ExamPeriod   ExamPeriod?    @relation(fields: [examPeriodId], references: [id])
+  examPeriodId String?
 }
 
-// ========== STUDENT & TEACHER ==========
+model ExamPeriod {
+  id          String   @id @default(uuid())
+  semesterId  String
+  startDate   DateTime
+  endDate     DateTime
+  createdById String // Admin or Registrar
 
-model Teacher {
-  id                Int         @id @default(autoincrement())
-  userId            Int         @unique
-  instituteId       String
-  user              User        @relation(fields: [userId], references: [id])
-  institute         Institute   @relation(fields: [instituteId], references: [id])
-  Leaddepartment    Department?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt()
-  gradedSubmissions Grade[] // Add this line to existing Teacher model
+  semester  Semester @relation(fields: [semesterId], references: [id])
+  createdBy Admin    @relation(fields: [createdById], references: [id])
+  exams     Exam[]
 }
 
-model Student {
-  id       Int     @id @default(autoincrement())
-  userId   Int     @unique
-  fullName String
-  bio      String?
+model ExamQuestion {
+  id             String       @id @default(uuid())
+  examId         String
+  question       String
+  type           QuestionType // STRUCTURED or UNSTRUCTURED
+  options        String[] // For structured type only
+  correctAnswers String[] // For structured type only
+  maxScore       Int
 
-  instituteId String
-  cohortId    String
+  exam Exam @relation(fields: [examId], references: [id])
 
-  user      User      @relation(fields: [userId], references: [id])
-  institute Institute @relation(fields: [instituteId], references: [id])
-  cohort    Cohort    @relation(fields: [cohortId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-
-  Enrollments Enrollment?
-  units       UnitEnrollement[]
-  submissions Submission[] // Add this line to existing Student model
-
-  StudentProgress StudentProgress[]
+  ExamAnswer ExamAnswer[]
 }
 
-// ========== STUDENT & CIURSES RELATIONS ====
+model ExamAttempt {
+  id          String    @id @default(uuid())
+  studentId   String
+  examId      String
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
 
-// student course enrollment student only enrolled at one course a time
-model Enrollment {
-  id        String            @id @default(uuid())
-  studentID Int               @unique
-  courseID  String
-  Status    EnrollmenstStatus @default(ACTIVE)
-  course    Course            @relation(fields: [courseID], references: [id])
-  student   Student           @relation(fields: [studentID], references: [id])
+  answers ExamAnswer[]
+  student Student      @relation(fields: [studentId], references: [id])
+  exam    Exam         @relation(fields: [examId], references: [id])
 }
 
-// course units registry tracking
-model UnitEnrollement {
-  id               String            @id @default(uuid())
-  studentID        Int
-  isActive         Boolean           @default(true)
-  status           EnrollmenstStatus
-  enrollmentPeriod String
-  AcademicYear     String
-  finalGrade       GradeScale? // Final grade for the unit
+model ExamAnswer {
+  id               String  @id @default(uuid())
+  examAttemptId    String
+  questionId       String
+  response         String
+  aiScore          Float? // AI-estimated percentage likelihood of being AI-generated
+  awardedScore     Int?
+  markedByAI       Boolean @default(false)
+  markedByLecturer Boolean @default(false)
 
-  student     Student          @relation(fields: [studentID], references: [id])
-  period      EnrollmentPeriod @relation(fields: [enrollmentPeriod], references: [id])
-  assessments Assessment[] // Link to all assessments for this enrollment
+  examAttempt ExamAttempt  @relation(fields: [examAttemptId], references: [id])
+  question    ExamQuestion @relation(fields: [questionId], references: [id])
 }
 
-model EnrollmentPeriod {
-  id           String  @id @default(uuid())
-  title        String
-  short_code   String
-  academicYear String
-  isActive     Boolean @default(false)
+model Assignment {
+  id             String   @id @default(uuid())
+  title          String
+  description    String
+  unitOfferingId String
+  semesterId     String
+  lecturerId     String
+  releaseDate    DateTime
+  dueDate        DateTime
 
-  year AcademicYear @relation(fields: [academicYear], references: [id])
+  unitOffering UnitOffering @relation(fields: [unitOfferingId], references: [id])
+  semester     Semester     @relation(fields: [semesterId], references: [id])
+  lecturer     Lecturer     @relation(fields: [lecturerId], references: [id])
 
-  unitEnrollments UnitEnrollement[]
+  submissions AssignmentSubmission[]
+  maxAttempts Int                    @default(1)
 }
 
-enum EnrollmenstStatus {
-  ENROLLED
-  ACTIVE
-  PENDING
-  DROPPED
-  COMPLETED
-  FAILED
+model AssignmentSubmission {
+  id               String   @id @default(uuid())
+  assignmentId     String
+  studentId        String
+  submittedAt      DateTime @default(now())
+  fileUrl          String?
+  responseText     String?
+  aiScore          Float?
+  awardedScore     Int?
+  markedByAI       Boolean  @default(false)
+  markedByLecturer Boolean  @default(false)
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
+  student    Student    @relation(fields: [studentId], references: [id])
 }
 
-enum AssessmentType {
-  CAT
-  ASSIGNMENT
-  EXAM
-  PROJECT
+model Cat {
+  id              String   @id @default(uuid())
+  title           String
+  unitOfferingId  String
+  lecturerId      String
+  semesterId      String
+  releaseDate     DateTime
+  dueDate         DateTime
+  durationMinutes Int
+
+  unitOffering UnitOffering @relation(fields: [unitOfferingId], references: [id])
+  lecturer     Lecturer     @relation(fields: [lecturerId], references: [id])
+  semester     Semester     @relation(fields: [semesterId], references: [id])
+
+  questions   CatQuestion[]
+  attempts    CatAttempt[]
+  maxAttempts Int           @default(1)
 }
 
-enum GradeScale {
-  A
-  B
-  C
-  D
-  E
-  F
+model CatQuestion {
+  id             String       @id @default(uuid())
+  catId          String
+  question       String
+  type           QuestionType
+  options        String[]
+  correctAnswers String[]
+  maxScore       Int
+
+  cat Cat @relation(fields: [catId], references: [id])
+
+  CatAnswer CatAnswer[]
+}
+
+model CatAttempt {
+  id          String    @id @default(uuid())
+  studentId   String
+  catId       String
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+
+  answers CatAnswer[]
+  student Student     @relation(fields: [studentId], references: [id])
+  cat     Cat         @relation(fields: [catId], references: [id])
+}
+
+model CatAnswer {
+  id               String  @id @default(uuid())
+  catAttemptId     String
+  questionId       String
+  response         String
+  aiScore          Float?
+  awardedScore     Int?
+  markedByAI       Boolean @default(false)
+  markedByLecturer Boolean @default(false)
+
+  catAttempt CatAttempt  @relation(fields: [catAttemptId], references: [id])
+  question   CatQuestion @relation(fields: [questionId], references: [id])
 }
 
 enum QuestionType {
-  MULTIPLE_CHOICE
-  TRUE_FALSE
-  SHORT_ANSWER
-  LONG_ANSWER
-  FILE_UPLOAD
-  PROGRAMMING
+  STRUCTURED
+  UNSTRUCTURED
 }
 
-enum DifficultyLevel {
-  EASY
-  MEDIUM
-  HARD
-  EXPERT
-}
+// ========================
+// 🧮 Grading & Transcripts
+// ========================
 
-model Question {
-  id              String          @id @default(uuid())
-  title           String
-  description     String
-  type            QuestionType
-  marks           Float
-  difficultyLevel DifficultyLevel @default(MEDIUM)
-
-  // For structured questions (MCQ, True/False)
-  options        QuestionOption[]
-  correctOptions QuestionOption[] @relation("CorrectOptions")
-
-  // For programming questions
-  sampleInput  String?
-  sampleOutput String?
-  testCases    TestCase[]
-
-  assessmentId String
-  assessment   Assessment @relation(fields: [assessmentId], references: [id])
-
-  answers Answer[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-}
-
-model QuestionOption {
-  id         String @id @default(uuid())
-  content    String
-  questionId String
-
-  question     Question  @relation(fields: [questionId], references: [id])
-  // For correct answers in MCQ
-  correctFor   Question? @relation("CorrectOptions", fields: [correctForId], references: [id])
-  correctForId String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-
-  Answer Answer[]
-}
-
-model TestCase {
-  id         String  @id @default(uuid())
-  input      String
-  output     String
-  isHidden   Boolean @default(false)
-  questionId String
-
-  question Question @relation(fields: [questionId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-}
-
-// Modified Assessment model to include question types
-model Assessment {
-  id               String         @id @default(uuid())
-  title            String
-  description      String?
-  type             AssessmentType
-  totalMarks       Float
-  weightage        Float
-  deadlineDate     DateTime
-  // to be  corrected to unit 
-  unitEnrollmentId String
-  timeLimit        Int? // Time limit in minutes (null for assignments)
-
-  // Instructions and requirements
-  instructions     String?
-  allowedFileTypes String[] // For assignments with file uploads
-  maxFileSize      Int? // Maximum file size in MB
-
-  questions      Question[]
-  unitEnrollment UnitEnrollement @relation(fields: [unitEnrollmentId], references: [id])
-  submissions    Submission[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-}
-
-// Modified Submission model to handle different types of submissions
-model Submission {
-  id           String   @id @default(uuid())
-  assessmentId String
-  studentId    Int
-  submittedAt  DateTime @default(now())
-  status       String   @default("SUBMITTED")
-
-  // For exam/CAT submissions
-  answers Answer[]
-
-  // For assignment submissions
-  fileSubmissions FileSubmission[]
-
-  assessment Assessment @relation(fields: [assessmentId], references: [id])
-  student    Student    @relation(fields: [studentId], references: [id])
-  grade      Grade?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-}
-
-// Modified Grade model to include per-question grading
 model Grade {
-  id            String     @id @default(uuid())
-  submissionId  String     @unique
-  marksObtained Float
-  gradeScale    GradeScale
-  feedback      String?
-  gradedBy      Int
+  id             String  @id @default(uuid())
+  enrollmentId   String
+  unitOfferingId String
+  score          Float
+  grade          String // e.g., A, B, C
+  remarks        String?
 
-  // Detailed grading breakdown
-  questionGrades QuestionGrade[]
+  enrollment   StudentEnrollment @relation(fields: [enrollmentId], references: [id])
+  unitOffering UnitOffering      @relation(fields: [unitOfferingId], references: [id])
 
-  submission Submission @relation(fields: [submissionId], references: [id])
-  teacher    Teacher    @relation(fields: [gradedBy], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
+  RemarkRequest RemarkRequest[]
 }
 
-model QuestionGrade {
-  id            String  @id @default(uuid())
-  gradeId       String
-  questionId    String
-  marksObtained Float
-  feedback      String?
+model Transcript {
+  id             String   @id @default(uuid())
+  studentId      String
+  academicYearId String
+  issuedAt       DateTime @default(now())
+  fileUrl        String?
 
-  grade Grade @relation(fields: [gradeId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
+  student      Student      @relation(fields: [studentId], references: [id])
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
 }
 
-enum AIDetectionStatus {
-  NOT_CHECKED
-  CHECKING
-  CHECKED
-  ERROR
+model GradeReport {
+  id           String   @id @default(uuid())
+  enrollmentId String
+  semesterId   String
+  issuedAt     DateTime @default(now())
+  fileUrl      String?
+
+  enrollment StudentEnrollment @relation(fields: [enrollmentId], references: [id])
+  semester   Semester          @relation(fields: [semesterId], references: [id])
 }
 
-enum PlagiarismSeverity {
-  NONE // 0-15%
-  LOW // 15-30%
-  MODERATE // 30-60%
-  HIGH // 60-85%
-  VERY_HIGH // 85-100%
-}
+// ========================
+// 📢 Admin & Staff Utilities
+// ========================
 
-// Modified Answer model with AI detection fields
-model Answer {
-  id           String @id @default(uuid())
-  submissionId String
-  questionId   String
-
-  // Existing fields
-  selectedOptions QuestionOption[]
-  textAnswer      String?
-
-  // AI Detection fields
-  aiDetectionStatus AIDetectionStatus @default(NOT_CHECKED)
-  aiGeneratedScore  Float? // Percentage probability of AI generation (0-100)
-  aiCheckTimestamp  DateTime? // When the AI check was performed
-  aiCheckVersion    String? // Version of AI detection system used
-
-  // Plagiarism fields
-  plagiarismScore    Float? // Percentage of content flagged as plagiarized (0-100)
-  plagiarismSeverity PlagiarismSeverity?
-  plagiarismSources  PlagiarismSource[]
-
-  // References for the detection results
-  aiDetectionResult AIDetectionResult?
-
-  submission Submission @relation(fields: [submissionId], references: [id])
-  question   Question   @relation(fields: [questionId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-}
-
-// New model to store detailed AI detection results
-model AIDetectionResult {
-  id       String @id @default(uuid())
-  answerId String @unique
-
-  // Detailed analysis
-  confidenceScore  Float // Overall confidence in the detection
-  humanWrittenProb Float // Probability of human-written content
-  aiGeneratedProb  Float // Probability of AI-generated content
-
-  // Pattern detection
-  detectedPatterns Json? // Stores patterns that indicate AI generation
-  analyzedFeatures Json? // Features analyzed in the text
-
-  // Model information
-  modelUsed    String // The AI model used for detection
-  modelVersion String // Version of the detection model
-
-  answer Answer @relation(fields: [answerId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-}
-
-// Model to store plagiarism sources
-model PlagiarismSource {
-  id       String @id @default(uuid())
-  answerId String
-
-  matchedText     String // The text that was matched
-  sourceUrl       String? // URL of the source if available
-  sourceTitle     String? // Title of the source document
-  matchPercentage Float // How much of the answer matches this source
-
-  answer Answer @relation(fields: [answerId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-}
-
-model FileSubmission {
-  id           String @id @default(uuid())
-  submissionId String
-  fileName     String
-  fileSize     Int // Size in bytes
-  fileType     String
-  fileUrl      String // URL to stored file
-
-  submission Submission @relation(fields: [submissionId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-}
-
-// Optional: Add this to Track AI Detection System Configuration
-model AIDetectionConfig {
-  id                  String  @id @default(uuid())
-  isEnabled           Boolean @default(true)
-  minimumTextLength   Int     @default(50) // Minimum text length to trigger check
-  aiScoreThreshold    Float   @default(0.75) // Threshold for flagging as AI-generated
-  plagiarismThreshold Float   @default(0.15) // Threshold for flagging as plagiarized
-
-  // API Configuration
-  apiEndpoint String
-  apiKey      String
-
-  // Rate Limiting
-  maxRequestsPerMinute Int @default(60)
-
-  // Notification Settings
-  notifyTeacher Boolean @default(true)
-  notifyAdmin   Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-}
-
-model Resource {
-  id          String    @id @default(uuid())
+model Notification {
+  id          String   @id @default(uuid())
   title       String
-  type        ResourceType
-  url         String
-  materialId  String?
-  
-  material    LearningMaterial? @relation(fields: [materialId], references: [id])
-  tags        String[]
-}
+  message     String
+  recipientId String?
+  roleTarget  Role?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
-enum ResourceType {
-  PDF
-  VIDEO
-  AUDIO
-  LINK
-  CODE_SNIPPET
-  GITHUB_REPO
+  recipient User? @relation(fields: [recipientId], references: [id])
 }
 
 model Announcement {
-  id          String    @id @default(uuid())
+  id          String   @id @default(uuid())
   title       String
   content     String
-  authorId    Int
-  unitId     String?
-  isPinned    Boolean   @default(false)
-  
-  author      User      @relation(fields: [authorId], references: [id])
-  unit       Unit?     @relation(fields: [unitId], references: [id])
+  createdById String
+  visibleTo   Role[]
+  createdAt   DateTime @default(now())
+
+  createdBy Admin @relation(fields: [createdById], references: [id])
 }
 
-model Notification {
-  id          String    @id @default(uuid())
-  userId      Int
-  title       String
-  message     String
-  type        NotificationType
-  isRead      Boolean   @default(false)
-  link        String?   // Related resource link
-  
-  user        User      @relation(fields: [userId], references: [id])
+model RemarkRequest {
+  id         String       @id @default(uuid())
+  gradeId    String
+  studentId  String
+  reason     String
+  status     RemarkStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  reviewedBy String?
+  reviewedAt DateTime?
+
+  grade   Grade   @relation(fields: [gradeId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
 }
 
-enum NotificationType {
-  ASSIGNMENT
-  GRADE_POSTED
-  ANNOUNCEMENT
-  DUE_DATE
-  DISCUSSION
-  SYSTEM
-}
-model StudentProgress {
-  id              String    @id @default(uuid())
-  studentId       Int
-  unitId         String
-  completedItems  String[]  // IDs of completed learning materials
-  lastAccessed    DateTime
-  timeSpent       Int       // Time spent in minutes
-  progressPercent Float
-
-  student         Student   @relation(fields: [studentId], references: [id])
-  unit           Unit      @relation(fields: [unitId], references: [id])
-}
-model Calendar {
-  id          String    @id @default(uuid())
-  title       String
-  type        EventType
-  startDate   DateTime
-  endDate     DateTime
-  location    String?
-  description String?
-  isRecurring Boolean   @default(false)
-
-  unitId      String?
+enum RemarkStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVISED
 }
 
-enum EventType {
-  CLASS_SESSION
-  EXAM
-  ASSIGNMENT_DUE
-  HOLIDAY
-  MEETING
-  OTHER
-}
-model Attendance {
-  id              String    @id @default(uuid())
-  sessionId       String
-  studentId       Int
-  status          AttendanceStatus
-  timestamp       DateTime
-  
-  // session         Session   @relation(fields: [sessionId], references: [id])
+model Feedback {
+  id             String   @id @default(uuid())
+  studentId      String
+  lecturerId     String?
+  unitOfferingId String
+  content        String
+  rating         Int // 1–5
+  createdAt      DateTime @default(now())
+
+  student      Student      @relation(fields: [studentId], references: [id])
+  lecturer     Lecturer?    @relation(fields: [lecturerId], references: [id])
+  unitOffering UnitOffering @relation(fields: [unitOfferingId], references: [id])
 }
 
-enum AttendanceStatus {
-  PRESENT
-  ABSENT
-  LATE
-  EXCUSED
-}
-model Discussion {
-  id               String    @id @default(uuid())
-  title            String
-  content          String
-  materialId       String?
-  unitId          String
-  authorId         Int
-  parentId         String?   // For threaded discussions
+model Resource {
+  id             String   @id @default(uuid())
+  unitOfferingId String
+  title          String
+  description    String?
+  fileUrl        String
+  uploadedById   String
+  uploadedAt     DateTime @default(now())
 
-  author           User      @relation(fields: [authorId], references: [id])
-  material         LearningMaterial? @relation(fields: [materialId], references: [id])
-  unit            Unit      @relation(fields: [unitId], references: [id])
-  replies          Discussion[] @relation("ThreadReplies")
-  parent           Discussion? @relation("ThreadReplies", fields: [parentId], references: [id])
-}
-
-model LearningMaterial {
-  id          String    @id @default(uuid())
-  title       String
-  type        MaterialType
-  content     String?    // For text-based content
-  fileUrl     String?    // For uploaded files
-  unitId      String
-  weekNumber  Int?
-  order       Int       // For ordering materials within a unit
-
-  // Tracking
-  viewCount   Int       @default(0)
-  isPublished Boolean   @default(false)
-
-  unit        Unit      @relation(fields: [unitId], references: [id])
-  resources   Resource[]
-  discussions Discussion[]
-}
-
-enum MaterialType {
-  LECTURE_NOTES
-  PRESENTATION
-  VIDEO
-  AUDIO
-  DOCUMENT
-  LINK
-  INTERACTIVE
+  uploadedBy   Lecturer     @relation(fields: [uploadedById], references: [id])
+  unitOffering UnitOffering @relation(fields: [unitOfferingId], references: [id])
 }

@@ -14,9 +14,9 @@ async function bootstrap() {
   });
 
   const config = new DocumentBuilder()
-    .setTitle('Homebase real estate openApi specifications')
+    .setTitle('Edubdrige Learning Management System API')
     .setDescription(
-      'Homebase is a property listing and exploring app alowing users to browseof list properties for sale or renting to the consumers',
+      'Edubdrige Learning Management System API is a RESTful API that provides a set of endpoints for managing users, courses, departments, units, academic years, cohorts, and more.',
     )
     .setVersion('1.0')
     .build();
